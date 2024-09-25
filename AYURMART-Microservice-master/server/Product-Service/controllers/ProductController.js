@@ -157,48 +157,47 @@ const rating = asyncHandler(async (req, res) => {
 
 // 
 
+// Upload Images
 const uploadImages = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { _id } = req.user;
     try {
-        // Uploader function to handle Cloudinary uploads
         const uploader = (filePath) => cloudinaryUploadImg(filePath, "images");
 
         const urls = [];
         const files = req.files;
         for (const file of files) {
-            const { path: filePath } = file;
+            const { path: tempFilePath, filename } = file;
 
-            // Ensure that the file path is absolute and resolve it safely
-            const resolvedPath = path.resolve(filePath);
+            // Sanitize the filename to prevent path manipulation
+            const sanitizedFilename = path.basename(filename);
+
+            // Create a safe resolved path in the intended directory
             const uploadsDir = path.resolve(path.join(__dirname, '../uploads/'));
+            const safeFilePath = path.join(uploadsDir, sanitizedFilename);
 
-            // Validate that the file resides within the uploads directory to avoid path traversal
-            if (!resolvedPath.startsWith(uploadsDir)) {
-                throw new Error('Invalid file path detected.');
-            }
-
-            // Upload the file to Cloudinary
-            const newPath = await uploader(filePath);
+            // Upload the image to Cloudinary
+            const newPath = await uploader(tempFilePath);
             urls.push(newPath);
 
-            // Safely delete the file after uploading
-            fs.unlink(resolvedPath, (err) => {
-                if (err) {
-                    console.error(`Failed to delete file: ${resolvedPath}`, err);
-                }
-            });
+            // Safely delete the file only if it's within the uploads directory
+            if (safeFilePath.startsWith(uploadsDir)) {
+                fs.unlink(safeFilePath, (err) => {
+                    if (err) {
+                        console.error(`Failed to delete file: ${safeFilePath}`, err);
+                    }
+                });
+            } else {
+                throw new Error('Attempted path traversal detected.');
+            }
         }
 
-        // Update the product with the new image URLs
+        // Update the product with new image URLs
         const findProduct = await Product.findByIdAndUpdate(
             id,
             {
                 images: urls.map((file) => file),
             },
-            {
-                new: true,
-            }
+            { new: true }
         );
 
         res.json(findProduct);
