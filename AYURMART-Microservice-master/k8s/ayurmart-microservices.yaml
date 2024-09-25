@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ayurmart-microservices
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: ayurmart-microservices
+  template:
+    metadata:
+      labels:
+        app: ayurmart-microservices
+    spec:
+      containers:
+        - name: ayurmart-web
+          image: ayurmart-web:latest
+          ports:
+            - containerPort: 3000
+        - name: ayurmart-order
+          image: ayurmart-order:latest
+          ports:
+            - containerPort: 7006
+        - name: ayurmart-product
+          image: ayurmart-product:latest
+          ports:
+            - containerPort: 7005
+        - name: ayurmart-cart
+          image: ayurmart-cart:latest
+          ports:
+            - containerPort: 7001
+        - name: ayurmart-coupon
+          image: ayurmart-coupon:latest
+          ports:
+            - containerPort: 7003
+        - name: ayurmart-userauth
+          image: ayurmart-userauth:latest
+          ports:
+            - containerPort: 7002
+        - name: ayurmart-seller
+          image: ayurmart-seller:latest
+          ports:
+            - containerPort: 7009
+            
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ayurmart-web
+spec:
+  selector:
+    app: ayurmart-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+  type: LoadBalancer

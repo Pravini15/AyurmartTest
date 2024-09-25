@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ayurmart-product
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ayurmart-product
+  template:
+    metadata:
+      labels:
+        app: ayurmart-product
+    spec:
+      containers:
+        - name: ayurmart-product
+          image: ayurmart-product:latest
+          ports:
+            - containerPort: 7005
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ayurmart-product
+spec:
+  selector:
+    app: ayurmart-product
+  ports:
+    - name: http
+      port: 80
+      targetPort: 7005

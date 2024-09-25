@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ayurmart-userauth
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ayurmart-userauth
+  template:
+    metadata:
+      labels:
+        app: ayurmart-userauth
+    spec:
+      containers:
+        - name: ayurmart-userauth
+          image: ayurmart-userauth:latest
+          ports:
+            - containerPort: 7003
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ayurmart-userauth
+spec:
+  selector:
+    app: ayurmart-userauth
+  ports:
+    - name: http
+      port: 80
+      targetPort: 7003

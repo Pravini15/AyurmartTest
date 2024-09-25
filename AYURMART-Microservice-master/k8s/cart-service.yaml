@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ayurmart-cart
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: ayurmart-cart
+  template:
+    metadata:
+      labels:
+        app: ayurmart-cart
+    spec:
+      containers:
+        - name: ayurmart-cart
+          image: ayurmart-cart:latest
+          ports:
+            - containerPort: 7001
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ayurmart-cart
+spec:
+  selector:
+    app: ayurmart-cart
+  ports:
+    - name: http
+      port: 80
+      targetPort: 7001
