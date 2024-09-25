@@ -155,26 +155,52 @@ const rating = asyncHandler(async (req, res) => {
     }
 });
 
+// 
+
 const uploadImages = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { _id } = req.user;
     try {
-        const uploader = (path) => cloudinaryUploadImg(path, "images");
+        // Uploader function to handle Cloudinary uploads
+        const uploader = (filePath) => cloudinaryUploadImg(filePath, "images");
+
         const urls = [];
         const files = req.files;
         for (const file of files) {
-            const { path } = file;
-            const newPath = await uploader(path);
+            const { path: filePath } = file;
+
+            // Ensure that the file path is absolute and resolve it safely
+            const resolvedPath = path.resolve(filePath);
+            const uploadsDir = path.resolve(path.join(__dirname, '../uploads/'));
+
+            // Validate that the file resides within the uploads directory to avoid path traversal
+            if (!resolvedPath.startsWith(uploadsDir)) {
+                throw new Error('Invalid file path detected.');
+            }
+
+            // Upload the file to Cloudinary
+            const newPath = await uploader(filePath);
             urls.push(newPath);
-            fs.unlinkSync(path);
+
+            // Safely delete the file after uploading
+            fs.unlink(resolvedPath, (err) => {
+                if (err) {
+                    console.error(`Failed to delete file: ${resolvedPath}`, err);
+                }
+            });
         }
-        const findProduct = await Product.findByIdAndUpdate(id, {
-            images: urls.map((file) => {
-                return file;
-            })
-        }, {
-            new: true,
-        })
+
+        // Update the product with the new image URLs
+        const findProduct = await Product.findByIdAndUpdate(
+            id,
+            {
+                images: urls.map((file) => file),
+            },
+            {
+                new: true,
+            }
+        );
+
         res.json(findProduct);
     } catch (error) {
         throw new Error(error);
