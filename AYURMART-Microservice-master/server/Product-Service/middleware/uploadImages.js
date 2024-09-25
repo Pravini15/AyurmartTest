@@ -73,12 +73,18 @@ const productImgResize = async (req, res, next) => {
                 .jpeg({ quality: 90 })
                 .toFile(safeOutputPath);
 
-            // Safely delete the original file only if it's within the allowed directory
-            fs.unlink(file.path, (err) => {
-                if (err) {
-                    console.error(`Failed to delete original file: ${file.path}`, err);
-                }
-            });
+            // Resolve and validate the original file path before deletion
+            const originalFilePath = path.resolve(file.path);
+            if (originalFilePath.startsWith(path.resolve(path.join(__dirname, '../public/images')))) {
+                // Safely delete the original file
+                fs.unlink(originalFilePath, (err) => {
+                    if (err) {
+                        console.error(`Failed to delete original file: ${originalFilePath}`, err);
+                    }
+                });
+            } else {
+                throw new Error('Invalid file path detected, preventing path traversal.');
+            }
         } else {
             throw new Error('Attempted path traversal detected.');
         }
