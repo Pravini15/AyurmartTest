@@ -4,6 +4,7 @@ import slugify from "slugify";
 import cloudinaryUploadImg from "../utils/cloudinary.js";
 import fs from 'fs';
 import axios from "axios";
+import path from 'path';
 
 const createProduct = asyncHandler(async (req, res) => {
     try {
